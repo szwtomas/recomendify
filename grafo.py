@@ -1,66 +1,81 @@
 import random
 
-class Vertice():
+class Grafo:
 
-    def __init__(self, dato, id):
-        self.adyacentes = {}
-        self.dato = dato
-        self.id = id
-
-    def obtener_adyacentes(self):
-        return self.adyacentes
-
-    def obtener_id(self):
-        return self.id
-
-class Grafo():
-
+    #Constructor del grafo, recibe si el mismo sera dirigido. De no ser indicado, se considera dirigido
     def __init__(self, es_dirigido = True):
         self.vertices = {}
         self.es_dirigido = es_dirigido
-        self.cantidad = 0 #ver si la usamos
+        self.cant_vertices = 0
     
-    def agregar_vertice(self, id, dato = None):
-        v = Vertice(dato, id)
-        self.cantidad += 1
-        self.vertices[id] = v
+    #Devuelve una lista con los vertices
+    def obtener_vertices(self):
+        return self.vertices.keys()
 
-    def eliminar_vertice(self, id):
-        if id not in self.vertices: return False
-        for id_v in self.vertices:
-            v = self.vertices[id_v]
-            if id in v.adyacentes:
-                v.adyacentes.pop(id)
-        self.vertices.pop(id)
-        return True
-                    
-    def agregar_arista(self, id_1, id_2, peso = 0):
-        if id_1 not in self.vertices or id_2 not in self.vertices: return False
-        self.vertices[id_1].adyacentes[id_2] = (self.vertices[id_2], peso)
-        if not self.es_dirigido:
-            self.vertices[id_2].adyacentes[id_1] = (self.vertices[id_1], peso)
+    #Devuelve la cantidad de vertices en el grafo
+    def cantidad_vertices(self):
+        return self.cant_vertices
 
-    def estan_unidos(self, id_1, id_2):
-        if id_1 not in self.vertices or id_2 not in self.vertices: return False
-        return id_2 in self.vertices[id_1].adyacentes
-
-    def peso_arista(self, v1, v2):
-        if not self.estan_unidos(v1.obtener_id(), v2.obtener_id()): return None
-        ady = self.vertices[v1.obtener_id()].obtener_adyacentes()
-        return ady[v2.obtener_id()][1]
-
+    #Devuelve True si el vertice pertenece al grafo, False si no
     def existe_vertice(self, id):
         return id in self.vertices
 
+    #Devuelve True si existe una arista entre los vertices indicados, caso contrario devuelve False
+    def existe_arista(self, id_1, id_2):
+        if not self.existe_vertice(id_1) or not self.existe_vertice(id_2): return False
+        return id_2 in self.vertices[id_1]
+
+    #Agrega un vertice al grafo, donde el id es el dato a guardar
+    def agregar_vertice(self, id):
+        self.vertices[id] = {} #Un conjunto con los adyacentes al vertice
+        self.cant_vertices += 1
+
+    #Devuelve una lista con los vertices adyacentes
+    def obtener_adyacentes(id):
+        return self.vertices[id].keys()
+
+    #Agrega una arista entre los vertices pasados, si no se indica el peso es 1 por defecto
+    #Devuelve False si no existe alguno de los vertices
+    def agregar_arista(self, id_1, id_2, peso = 1):
+        if not self.existe_vertice(id_1) or not self.existe_vertice(id_2): return False
+        (self.vertices[id_1])[id_2] = peso
+        if not self.es_dirigido: (self.vertices[id_2])[id_1] = peso
+        return True
+
+    #Devuelve False si no existe algun vertice o la arista
+    def peso_arista(self, id_1, id_2):
+        if not self.existe_vertice(id_1) or not self.existe_vertice(id_2): return False
+        if not self.existe_arista(id_1, id_2): return False
+        return (self.vertices[id_1])[id_2]
+        
+    #Devuelve una lista con tuplas de la forma (origen, destino, peso)
+    def obtener_aristas(self):
+        aristas_enlistadas = set() #Conjunto para no repetir aristas en grafos no dirigidos
+        aristas = []
+        for v in self.obtener_vertices():
+            for w in self.vertices[v]: #Para cada key en los adyacentes de v
+                if (self.es_dirigido) or (not self.es_dirigido and not (w, v) in aristas_enlistadas):
+                    aristas.append((v, w, self.peso_arista(v, w)))
+                    aristas_enlistadas.add((v, w))
+        return aristas
+
+    #Devuelve un vertice aleatorio, o False si el grafo no tiene vertices
     def vertice_aleatorio(self):
-        if self.cantidad == 0: return False
-        return random.choice(self.vertices.values())
+        if self.cant_vertices == 0: return False
+        return random.choice(list(self.vertices))
 
-    def obtener_vertices(self):
-        return self.vertices
+    #Elimina un vertice del grafo, devuelve False si no existe el vertice o True si lo borra correctamente
+    def eliminar_vertice(self, id):
+        if not self.existe_vertice(id): return False
+        del self.vertices[id]
+        self.cant_vertices -= 1
+        return True
 
-    def obtener_adyacentes(self, id):
-        if id not in self.vertices return False
-        return self.vertices[id].obtener_adyacentes()
-
-    
+    #Elimina una arista entre los vertices indicados
+    #En caso de no existir alguno de los vertices o la arista, devuelve False. Si se elimina correctamente devuelve True
+    def eliminar_arista(self, id_1, id_2):
+        if not self.existe_vertice(id_1) or not self.existe_vertice(id_2): return False
+        if not self.existe_arista(id_1, id_2): return False
+        del (self.vertices[id_1])[id_2]
+        if not self.es_dirigido: del (self.vertices[id_2])[id_1]
+        return True
