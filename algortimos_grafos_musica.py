@@ -1,42 +1,27 @@
-import heapq
 
-class Heap():
+ITERACIONES_DEFECTO = 500
+AMORTIGUACION_DEFECTO = 0.85
 
-    def __init__(self):
-        self.heap = heapq.heapify([])
-        self.cantidad = 0
+def ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings):
+    termino_amortiguacion = (1 - coeficiente_amortiguacion) / grafo.cantidad_vertices()
+    termino_ranking = 0
+    for ady in grafo.obtener_adyacentes(cancion):
+        termino_ranking += rankings[ady] / len(grafo.obtener_adyacentes(ady))
+    return termino_amortiguacion + coeficiente_amortiguacion * termino_ranking
 
-    def cantidad(self):
-        return self.cantidad
+def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_amortiguacion = AMORTIGUACION_DEFECTO):
+    rankings = {}
+    #termino_amortiguacion = (1 - coeficiente_amortiguacion) / grafo.cantidad_vertices()
+    for cancion in grafo.obtener_vertices():
+        rankings[cancion] = 0.99 #CAMBIAR!! Es aprox 1/vertices o mayor
+    for i in range(iteraciones):
+        for cancion in grafo.obtener_vertices(): 
+            rankings[cancion] = ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings)
+    lista_rankings = []
+    for cancion in rankings:
+        lista_rankings.append((rankings[cancion], cancion))
+    lista_rankings.sort(key = lambda tupla: tupla[0])
+    lista_rankings.reverse()
+    return lista_rankings
 
-    def encolar(self, elemento, dato):
-        heapq.heappush(self.heap, (dato, elemento))
-        self.cantidad += 1
-
-    def desencolar(self):
-        elemento = heapq.heappop(self.heap)
-        if elemento is not None: 
-            self.cantidad += 1
-        return elemento[1]
-
-    def esta_vacia(self):
-        return self.cantidad == 0    
-
-def camino_minimo(grafo, origen):
-    dist = {}
-    padres = {}
-    for v in grafo.obtener_vertices():
-        dist[v] = float('inf') #infinito en python
-    dist[origen] = 0
-    padre[origen] = None
-    heap = Heap()
-    heap.encolar(origen, 0)
-    while not heap.esta_vacia():
-        v = heap.desencolar()
-        for w in grafo.obtener_adyacentes(v):
-            if dist[v] + grafo.peso_arista(v, w) < dist[w]:
-                dist[w] = dist[v] + grafo.peso_arista(v, w)
-                padre[w] = v
-                heap.encolar(w, dist[w])
-    return padre, distancia
 

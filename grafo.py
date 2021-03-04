@@ -31,8 +31,9 @@ class Grafo:
         self.cant_vertices += 1
 
     #Devuelve una lista con los vertices adyacentes
-    def obtener_adyacentes(id):
+    def obtener_adyacentes(self, id):
         return self.vertices[id].keys()
+
 
     #Agrega una arista entre los vertices pasados, si no se indica el peso es 1 por defecto
     #Devuelve False si no existe alguno de los vertices
