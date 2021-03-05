@@ -34,6 +34,8 @@ class Grafo:
     def obtener_adyacentes(self, id):
         return self.vertices[id].keys()
 
+    def cantidad_aristas(self, id):
+        return len(self.vertices[id])
 
     #Agrega una arista entre los vertices pasados, si no se indica el peso es 1 por defecto
     #Devuelve False si no existe alguno de los vertices
@@ -49,6 +51,13 @@ class Grafo:
         if not self.existe_arista(id_1, id_2): return False
         return (self.vertices[id_1])[id_2]
         
+    #Cambia el peso de una arista
+    def cambiar_peso_arista(self, id_1, id_2, peso_nuevo):
+        if not self.existe_arista(id_1, id_2): return False
+        (self.vertices[id_1])[id_2] = peso_nuevo
+        if not self.es_dirigido: (self.vertices[id_2])[id_1] = peso_nuevo
+        return True
+
     #Devuelve una lista con tuplas de la forma (origen, destino, peso)
     def obtener_aristas(self):
         aristas_enlistadas = set() #Conjunto para no repetir aristas en grafos no dirigidos
