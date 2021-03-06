@@ -29,7 +29,6 @@ def _procesar_archivo(ruta_archivo):
                 usuarios[entrada[1]] = Usuario(entrada[1])
             if not usuarios[entrada[1]].tiene_playlist(p.obtener_id()):
                 usuarios[entrada[1]].agregar_playlist(p.obtener_id())
-        #tenemos un dic con todos los users, y las canciones cargadas al grafo
         for u in usuarios:
             canciones_usuarios.agregar_vertice(usuarios[u])
             for p in usuarios[u].obtener_id_playlists():
@@ -105,17 +104,17 @@ def cargar_playlists(playlists):
     return canciones_playlist
 
 def imprimir_camino(camino, playlists):
-    print(camino[i].obtener_nombre_cancion() + " - " + camino[i].obtener_artista(), end=" --> ")
+    print(camino[0].obtener_nombre_cancion() + " - " + camino[0].obtener_artista(), end=" --> ")
     for i in range(1, len(camino) - 1):
         if isinstance(camino[i], Cancion): continue
         print("aparece en playlist", end=" --> ")
-        print(playlists[camino[i].obtener_playlist_cancion(camino[i-1])].obtener_nombre(), end=" --> ")
+        print(playlists[camino[i].obtener_playlist_cancion(camino[i-1], playlists)].obtener_nombre(), end=" --> ")
         print("de", end=" --> ")
         print(camino[i].obtener_nombre(), end=" --> ")
         print("tiene una playlist", end = " --> ")
-        print(playlists[camino[i].obtener_playlist_cancion(camino[i+1])].obtener_nombre(), end=" --> ")
+        print(playlists[camino[i].obtener_playlist_cancion(camino[i+1], playlists)].obtener_nombre(), end=" --> ")
         print("donde aparece", end=" --> ")
-        print(camino[i+1].obtener_nombre())
+        print(camino[i+1].obtener_nombre_cancion() + " - " + camino[i+1].obtener_artista())
 
 '''
 Recibe el grafo de usuarios, la cancion en la cual empieza el camino, la cancion a la que se quiere llegar
@@ -135,7 +134,7 @@ def camino_canciones_usuarios(grafo_usuarios, cancion_origen, cancion_destino, p
     if not camino: 
         print("No se encontro recorrido")
         return False
-    imprimir_camino(grafo_usuarios, camino, playlists)
+    imprimir_camino(camino, playlists)
     return True
         
 

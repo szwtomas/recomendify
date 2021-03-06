@@ -1,3 +1,5 @@
+from cola import Cola
+from modelos import *
 
 ITERACIONES_DEFECTO = 500
 AMORTIGUACION_DEFECTO = 0.85
@@ -48,12 +50,11 @@ def bfs(grafo, origen):
 #Recibe un grafo que tiene canciones y usuarios como vertices, y arista entre ellos si al usuario le gusta la cancion
 #Devuelve una lista con el camino minimo de canciones y usuarios desde una cancion hasta otra
 
-def reecontrstruir_camino(grafo, padres, destino):
+def reecontrstruir_camino(padres, destino):
     v = destino
     camino = []
-    camino.append(v)
     while v is not None:
-        camino.append(padres[v])
+        camino.append(v)
         v = padres[v]
     camino.reverse()
     return camino
@@ -75,7 +76,7 @@ def camino_minimo(grafo, cancion_origen, cancion_destino):
                 visitados.add(w)
                 padres[w] = v
                 cola.encolar(w)
-                if w == cancion_destino():
-                    return obtener_lista_minima(grafo, padres, cancion_destino)
+                if isinstance(w, Cancion) and w == cancion_destino:
+                    return reecontrstruir_camino(padres, cancion_destino)
     return False
 

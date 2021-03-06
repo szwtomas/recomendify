@@ -71,7 +71,7 @@ class Usuario:
     '''
     def obtener_playlist_cancion(self, cancion_buscada, playlists):
         for p in self.obtener_id_playlists():
-            for c in playlists[p]:
+            for c in playlists[p].obtener_canciones():
                 if c == cancion_buscada:
                     return p
         return -1
