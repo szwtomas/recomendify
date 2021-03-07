@@ -1,6 +1,6 @@
 import sys
 from grafo import *
-from biblioteca import page_rank_canciones, camino_minimo
+from biblioteca import page_rank_canciones, camino_minimo, ciclo_n_canciones
 from modelos import *
 
 '''
@@ -58,50 +58,18 @@ def procesar_archivo(ruta_archivo):
             playlists[entrada[4]].append(cancion)
     return canciones_usuarios, playlists
 
-
-
-def _cargar_playlists(playlists):
-    canciones_playlist = Grafo(False)
+def cargar_canciones_playlists(playlists):
+    grafo_playlists = Grafo(False)
     for p in playlists:
-        i=1
-        for cancion in playlists[p]:
-            if not canciones_playlist.existe_vertice(cancion):
-                canciones_playlist.agregar_vertice(cancion)           
-            for j in range(i, len(playlists[p])):
-                cancion_2 = (playlists[p])[j]
-                if not canciones_playlist.existe_vertice(cancion):
-                    canciones_playlist.agregar_vertice(cancion_2)
-                if cancion != cancion_2 and not canciones_playlist.existe_arista(cancion, cancion_2):
-                    canciones_playlist.agregar_arista(cancion, cancion_2)
-            i += 1
-    return canciones_playlist   
-
-
-def cargar_playlists_2(playlists):
-    grafo = Grafo(False)
-    for p in playlists:
-        i=0
-        for c in playlists[p]:
-            if not grafo.existe_vertice(c): grafo.agregar_vertice(c)
+        canciones_playlist = playlists[p].obtener_canciones()
+        for i in range(0, len(canciones_playlist)):
+            if not grafo_playlists.existe_vertice(canciones_playlist[i]):
+                grafo_playlists.agregar_vertice(canciones_playlist[i]) 
             for j in range(0, i):
-                if not grafo.existe_arista((playlists[p])[i], (playlists[p])[j]):
-                    grafo.agregar_arista((playlists[p])[i], (playlists[p])[j])
-                else:
-                    playlist_compartidas = grafo.peso_arista((playlists[p])[i], (playlists[p])[j]) + 1
-                    grafo.cambiar_peso_arista((playlists[p])[i], (playlists[p])[j], playlist_compartidas)
-            i += 1
-    return grafo
+                if not grafo_playlists.existe_arista(canciones_playlist[i], canciones_playlist[j]):
+                    grafo_playlists.agregar_arista(canciones_playlist[i], canciones_playlist[j])
+    return grafo_playlists
 
-def cargar_playlists(playlists):
-    canciones_playlist = Grafo(False)
-    for p in playlists:
-        for cancion in playlists[p]: 
-            if not canciones_playlist.existe_vertice(cancion):
-                canciones_playlist.agregar_vertice(cancion)
-                for cancion_2 in playlists[p]:
-                    if cancion != cancion_2 and not canciones_playlist.existe_arista(cancion, cancion_2):
-                        canciones_playlist.agregar_arista(cancion, cancion_2)
-    return canciones_playlist
 
 def imprimir_camino(camino, playlists):
     print(camino[0].obtener_nombre_cancion() + " - " + camino[0].obtener_artista(), end=" --> ")
@@ -138,11 +106,32 @@ def camino_canciones_usuarios(grafo_usuarios, cancion_origen, cancion_destino, p
     return True
         
 
+def mostrar_ciclo(grafo_canciones, n, cancion_origen):
+    camino = ciclo_n_canciones(grafo_canciones, n, cancion_origen)
+    if not camino:
+        print("No se encontro recorrido")
+        return
+    for i in range(0, len(camino) - 1):
+        print(camino[i].obtener_nombre_cancion() + " - " + camino[i].obtener_artista(), end = " --> ")
+    print(cancion_origen.obtener_nombre_cancion() + " - " + cancion_origen.obtener_artista())
+
 if len(sys.argv) != 2:  raise ValueError("Error, cantidad de parametros distinta de 2")
 grafo_usuarios, playlists = _procesar_archivo("spotify-mini.tsv")
-print("Grafos cargados correctamente")
+print("Grafo canciones cargado correctamente")
 
+grafo_playlists = cargar_canciones_playlists(playlists)
+print("Grafo playlists cargado")
+
+
+
+'''
 origen = Cancion("Numb", "Linkin Park")
 destino = Cancion("This Is How We Do", "Katy Perry")
 
 camino_canciones_usuarios(grafo_usuarios, origen, destino, playlists)
+'''
+numb = Cancion("Numb", "Linkin Park")
+
+mostrar_ciclo(grafo_playlists, 1300, numb)
+
+

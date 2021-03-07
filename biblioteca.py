@@ -80,3 +80,27 @@ def camino_minimo(grafo, cancion_origen, cancion_destino):
                     return reecontrstruir_camino(padres, cancion_destino)
     return False
 
+
+def _ciclo_n_canciones(grafo_canciones, n, cancion_origen, cancion_actual, visitados, camino):
+    visitados.add(cancion_actual)
+    camino.append(cancion_actual)
+    if len(camino) == n:
+        for w in grafo_canciones.obtener_adyacentes(cancion_actual):
+            if w == cancion_origen:
+                camino.append(w)
+                return True
+        camino.pop()
+        visitados.remove(cancion_actual)
+        return False
+    for w in grafo_canciones.obtener_adyacentes(cancion_actual):
+        if w not in visitados:
+            if _ciclo_n_canciones(grafo_canciones, n, cancion_origen, w, visitados, camino): return True
+    visitados.remove(cancion_actual)
+    camino.pop()
+    return False
+
+def ciclo_n_canciones(grafo_canciones, n, cancion_origen):
+    camino = []
+    visitados = set()
+    if _ciclo_n_canciones(grafo_canciones, n, cancion_origen, cancion_origen, visitados, camino): return camino
+    return False
