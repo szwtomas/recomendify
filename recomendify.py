@@ -1,6 +1,6 @@
 import sys
 from grafo import *
-from biblioteca import page_rank_canciones, camino_minimo, ciclo_n_canciones
+from biblioteca import page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango
 from modelos import *
 
 '''
@@ -121,17 +121,5 @@ print("Grafo canciones cargado correctamente")
 
 grafo_playlists = cargar_canciones_playlists(playlists)
 print("Grafo playlists cargado")
-
-
-
-'''
-origen = Cancion("Numb", "Linkin Park")
-destino = Cancion("This Is How We Do", "Katy Perry")
-
-camino_canciones_usuarios(grafo_usuarios, origen, destino, playlists)
-'''
-numb = Cancion("Numb", "Linkin Park")
-
-mostrar_ciclo(grafo_playlists, 1300, numb)
 
 

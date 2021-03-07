@@ -104,3 +104,24 @@ def ciclo_n_canciones(grafo_canciones, n, cancion_origen):
     visitados = set()
     if _ciclo_n_canciones(grafo_canciones, n, cancion_origen, cancion_origen, visitados, camino): return camino
     return False
+
+
+def canciones_en_rango(grafo_canciones, n, cancion_origen):
+    visitados = set()
+    dist = {}
+    dist[cancion_origen] = 0
+    visitados.add(cancion_origen)
+    cola = Cola()
+    cola.encolar(cancion_origen)
+    cant_en_rango = 0
+    while not cola.esta_vacia():
+        c = cola.desencolar()
+        for w in grafo_canciones.obtener_adyacentes(c):
+            if w not in visitados:
+                visitados.add(w)
+                dist[w] = dist[c] + 1
+                if dist[w] > n: break
+                if dist[w] == n: cant_en_rango += 1
+                cola.encolar(w) 
+    return cant_en_rango
+    
