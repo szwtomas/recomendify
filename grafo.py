@@ -8,6 +8,9 @@ class Grafo:
         self.es_dirigido = es_dirigido
         self.cant_vertices = 0
     
+    def __len__(self):
+        return self.cant_vertices
+
     #Devuelve una lista con los vertices
     def obtener_vertices(self):
         return self.vertices.keys()

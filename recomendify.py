@@ -1,6 +1,6 @@
 import sys
 from grafo import *
-from biblioteca import page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango
+from biblioteca import page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango, clustering_cancion, obtener_grados
 from modelos import *
 
 '''
@@ -17,7 +17,7 @@ def _procesar_archivo(ruta_archivo):
         for linea in archivo:
             entrada = linea.split(SEPARADOR)
             if entrada[0] == "ID": continue
-            if len(entrada) != 7: continue #SACAR!!!
+            #if len(entrada) != 7: continue #SACAR!!!
             c = Cancion(entrada[2], entrada[3], entrada[6].split(","))
             p = Playlist(entrada[5], int(entrada[4]))
             if not canciones_usuarios.existe_vertice(c):
@@ -46,7 +46,7 @@ def procesar_archivo(ruta_archivo):
         for linea in archivo:
             entrada = linea.split(SEPARADOR)
             if entrada[0] == "ID": continue
-            if len(entrada) != 7: continue #SACAR!!!
+            #if len(entrada) != 7: continue #SACAR!!!
             if not canciones_usuarios.existe_vertice(entrada[1]):
                 canciones_usuarios.agregar_vertice(entrada[1])
             cancion = Cancion(entrada[2], entrada[3], entrada[6].split(","))
@@ -121,5 +121,11 @@ print("Grafo canciones cargado correctamente")
 
 grafo_playlists = cargar_canciones_playlists(playlists)
 print("Grafo playlists cargado")
+
+
+grados = obtener_grados(grafo_playlists)
+
+for v in grafo_playlists.obtener_vertices():
+    print("Coeficiente " + v.obtener_nombre_cancion() + " - " + v.obtener_artista() + ": " + str(clustering_cancion(grafo_playlists, grados, v)))
 
 

@@ -1,5 +1,6 @@
 from cola import Cola
 from modelos import *
+#import math
 
 ITERACIONES_DEFECTO = 500
 AMORTIGUACION_DEFECTO = 0.85
@@ -26,25 +27,6 @@ def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_am
     lista_rankings.reverse()
     return lista_rankings
 
-
-def bfs(grafo, origen):
-    visitados = set()
-    padres = {}
-    padres[origen] = None
-    dist = {}
-    dist[origen] = 0
-    visitados.add(origen)
-    cola = Cola()
-    cola.encolar(origen)
-    while not cola.esta_vacia():
-        v = cola.desencolar()
-        for w in grafo.adyacentes(v):
-            if w not in visitados:
-                padres[w] = v
-                dist[w] = dist[v] + 1
-                visitados.add(w)
-                cola.encolar(w)
-    return padres, dist
 
 
 #Recibe un grafo que tiene canciones y usuarios como vertices, y arista entre ellos si al usuario le gusta la cancion
@@ -125,3 +107,57 @@ def canciones_en_rango(grafo_canciones, n, cancion_origen):
                 cola.encolar(w) 
     return cant_en_rango
     
+
+def obtener_grados(grafo):
+    grados = {}
+    for v in grafo.obtener_vertices():
+        grados[v] = 0
+    for v in grafo.obtener_vertices():
+        grados[v] = len(grafo.obtener_adyacentes(v))
+    return grados
+
+#Devuelve la cantidad de adyacentes de v que estan relacionados con v
+def cantidad_relacionados(grafo, v):
+    cant_relacionados = 0
+    for w in grafo.obtener_adyacentes(v):
+        for k in grafo.obtener_adyacentes(w):
+            if grafo.existe_arista(v, k): cant_relacionados += 1
+    return cant_relacionados
+
+CANT_DECIMALES = 3
+
+def clustering_cancion(grafo, grados, cancion):
+    if grados[cancion] == 0: return 0
+    return round(((cantidad_relacionados(grafo, cancion))) / (grados[cancion] * (grados[cancion] - 1)), CANT_DECIMALES)
+
+
+def clustering_promedio(grafo, grados):
+    coeficientes = {}
+    suma = 0
+    for v in grafo.obtener_vertices():
+        suma += clustering_cancion(grafo, grados, v)
+    return suma / grafo.cantidad_vertices()
+
+def actualizar_page_rank():
+    #HACER ESTO
+
+#recibe el grafo de usuarios, una lista de canciones que le gustan y la cantidad de canciones a devolver (n)
+def recomendar_canciones(grafo, lista_canciones, n):
+    LARGO_CAMINO = CANT_ITERACIONES = 20
+    COEFICIENTE_INICIAL = 1
+    page_rank = {} 
+    for c in lista_canciones:
+        if c not in page_rank:
+            page_rank[c] = [COEFICIENTE_INICIAL, c]
+        actualizar_page_rank(grafo, c, page_rank, LARGO_CAMINO, CANT_ITERACIONES)
+    page_rank_ordenado = (page_rank.values()).sort(key = lambda lista: lista_canciones[0])
+    page_rank_ordenado.reverse()
+    cant_recomendadas = 0
+    i=0
+    lista_recomendadas = []
+    while cant_recomendadas < n:
+       if not (page_rank_ordenado[i])[1] in lista_canciones:
+           lista_recomendadas.append((page_rank_ordenado[i])[1])
+           cant_recomendadas += 1
+        i += 1
+    return lista_recomendadas
