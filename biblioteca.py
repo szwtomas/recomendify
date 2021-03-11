@@ -138,13 +138,12 @@ def clustering_promedio(grafo, grados):
         suma += clustering_cancion(grafo, grados, v)
     return suma / grafo.cantidad_vertices()
 
-def actualizar_page_rank():
-    #HACER ESTO
 
+'''
 #recibe el grafo de usuarios, una lista de canciones que le gustan y la cantidad de canciones a devolver (n)
 def recomendar_canciones(grafo, lista_canciones, n):
     LARGO_CAMINO = CANT_ITERACIONES = 20
-    COEFICIENTE_INICIAL = 1
+    COEFICIENTE_INICIAL = 1 / grafo.cantidad_vertices()
     page_rank = {} 
     for c in lista_canciones:
         if c not in page_rank:
@@ -161,3 +160,48 @@ def recomendar_canciones(grafo, lista_canciones, n):
            cant_recomendadas += 1
         i += 1
     return lista_recomendadas
+
+
+#Unica iteracion de PageRank comenzando del vertice V
+def grafo_page_rank(grafo, grados, v, largo_camino, page_rank):
+    if v not in page_rank: page_rank[v] = 0
+    for i in range(largo_camino):
+        if i == 0: valor_transmitido = 1 / grados[v]
+        else: valor_transmitido = page_rank[v] / grados[v]
+        v = grafo.adyacente_aleatorio(v)
+        if v not in page_rank: page_rank[v] = 0
+        page_rank[v] += valor_transmitido
+'''
+
+def actualizar_page_rank(grafo, v, grados, page_rank):
+    LARGO_CAMINO = 30
+    if v not in page_rank: page_rank[v] = 0
+    for i in range(LARGO_CAMINO):
+        if i == 0: valor_transmitido = 1 / grados[v]
+        else: valor_transmitido = page_rank[v] / grados[v]
+        v = grafo.adyacente_aleatorio(v)
+        if v not in page_rank: page_rank[v] = 0
+        page_rank[v] += valor_transmitido
+    return page_rank
+
+
+#Recibe el grafo, una lista con gustos del usuario, la cantidad de recomendaciones a recibir, y si se quieren canciones o users
+def recomendar(grafo, lista_gustos, n, grados, rec_canciones = True):
+    CANT_ITERACIONES = 300
+    page_rank = {}
+    recomendaciones = []
+    for i in range(CANT_ITERACIONES):
+        for gusto in lista_gustos:
+            actualizar_page_rank(grafo, gusto, grados, page_rank)  
+    entradas_rankeadas = []
+    for key in page_rank:
+        if rec_canciones and isinstance(key, Cancion): #Si quiero canciones y la entrada es una cancion
+            if key not in lista_gustos: entradas_rankeadas.append((page_rank[key], key))
+        elif (not rec_canciones) and isinstance(key, Usuario): #Si quiero usuarios y la entrada es un usuario
+            if key not in lista_gustos: entradas_rankeadas.append((page[key], key))
+    entradas_rankeadas.sort(key = lambda tupla: tupla[0])
+    entradas_rankeadas.reverse()
+    print(len(entradas_rankeadas))
+    for i in range(n):
+        recomendaciones.append((entradas_rankeadas[i])[1])
+    return recomendaciones

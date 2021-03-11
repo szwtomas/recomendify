@@ -1,6 +1,6 @@
 import sys
 from grafo import *
-from biblioteca import page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango, clustering_cancion, obtener_grados
+from biblioteca import recomendar, page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango, clustering_cancion, obtener_grados
 from modelos import *
 
 '''
@@ -123,9 +123,19 @@ grafo_playlists = cargar_canciones_playlists(playlists)
 print("Grafo playlists cargado")
 
 
-grados = obtener_grados(grafo_playlists)
+gustos = [Cancion("Californication", "Red Hot Chili Peppers"), Cancion("By The Way", "Red Hot Chili Peppers"), Cancion("Holiday", "Green Day"), Cancion("Boulevard Of Broken Dreams", "Green Day")]
 
-for v in grafo_playlists.obtener_vertices():
-    print("Coeficiente " + v.obtener_nombre_cancion() + " - " + v.obtener_artista() + ": " + str(clustering_cancion(grafo_playlists, grados, v)))
+#gustos = [Cancion("Friday I'm In Love", "The Cure")]
+
+grados = obtener_grados(grafo_usuarios)
+
+recomendaciones = recomendar(grafo_usuarios, gustos, 20, grados, True)
 
 
+for c in recomendaciones:
+    if isinstance(c, Cancion):
+        print(c.obtener_nombre_cancion() + " - " + c.obtener_artista())
+    elif isinstance(c, Usuario):
+        print("Es un usuario")
+    else:
+        print("Error")

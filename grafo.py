@@ -77,6 +77,10 @@ class Grafo:
         if self.cant_vertices == 0: return False
         return random.choice(list(self.vertices))
 
+    #Devuelve un vertice aleatorio que sea adyacente a v
+    def adyacente_aleatorio(self, v):
+        return random.choice(list(self.obtener_adyacentes(v)))
+
     #Elimina un vertice del grafo, devuelve False si no existe el vertice o True si lo borra correctamente
     def eliminar_vertice(self, id):
         if not self.existe_vertice(id): return False
