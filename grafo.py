@@ -19,6 +19,15 @@ class Grafo:
     def cantidad_vertices(self):
         return self.cant_vertices
 
+    #Devuelve la cantidad de aristas del grafo
+    def cantidad_aristas(self):
+        cant_aristas = 0
+        for v in self.obtener_vertices():
+            cant_aristas += len(self.obtener_adyacentes(v))
+        if not self.es_dirigido:
+            cant_aristas = cant_aristas // 2
+        return cant_aristas
+
     #Devuelve True si el vertice pertenece al grafo, False si no
     def existe_vertice(self, id):
         return id in self.vertices
@@ -37,7 +46,7 @@ class Grafo:
     def obtener_adyacentes(self, id):
         return self.vertices[id].keys()
 
-    def cantidad_aristas(self, id):
+    def cantidad_adyacentes(self, id):
         return len(self.vertices[id])
 
     #Agrega una arista entre los vertices pasados, si no se indica el peso es 1 por defecto

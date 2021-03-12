@@ -1,10 +1,13 @@
 from cola import Cola
 from modelos import *
-#import math
 
-ITERACIONES_DEFECTO = 500
+ITERACIONES_DEFECTO = 6
 AMORTIGUACION_DEFECTO = 0.85
 
+'''
+Recibe un grafo con canciones, el coeficiente de amortiguacion a usar y un diccionario con los rankings
+Devuelve el ranking de la presente iteracion de la cancion
+'''
 def ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings):
     termino_amortiguacion = (1 - coeficiente_amortiguacion) / grafo.cantidad_vertices()
     termino_ranking = 0
@@ -12,11 +15,15 @@ def ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings):
         termino_ranking += rankings[ady] / len(grafo.obtener_adyacentes(ady))
     return termino_amortiguacion + coeficiente_amortiguacion * termino_ranking
 
+'''
+Recibe un grafo de canciones, la cantidad de iteraciones a realizar (mientras mas se hagan es mas preciso, se toma
+500 como valor por defecto), y el coeficiente de amortiguacion a usar.
+Devuelve una lista ordenada con las canciones rankeadas, en forma de tupla (pagerank, cancion)
+'''
 def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_amortiguacion = AMORTIGUACION_DEFECTO):
     rankings = {}
-    #termino_amortiguacion = (1 - coeficiente_amortiguacion) / grafo.cantidad_vertices()
     for cancion in grafo.obtener_vertices():
-        rankings[cancion] = 0.99 #CAMBIAR!! Es aprox 1/vertices o mayor
+        rankings[cancion] = 1 / grafo.cantidad_vertices()
     for i in range(iteraciones):
         for cancion in grafo.obtener_vertices(): 
             rankings[cancion] = ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings)
@@ -29,9 +36,10 @@ def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_am
 
 
 
-#Recibe un grafo que tiene canciones y usuarios como vertices, y arista entre ellos si al usuario le gusta la cancion
-#Devuelve una lista con el camino minimo de canciones y usuarios desde una cancion hasta otra
-
+'''
+Recibe un diccionario con padres, y el destino final del camino
+Devuelve una lista con el camino reeconstruido
+'''
 def reecontrstruir_camino(padres, destino):
     v = destino
     camino = []
@@ -41,9 +49,10 @@ def reecontrstruir_camino(padres, destino):
     camino.reverse()
     return camino
 
-#Recibe un grafo que tiene canciones y usuarios como vertices, y arista entre ellos si al usuario le gusta la cancion
-#Devuelve una lista con el camino minimo de canciones y usuarios desde una cancion hasta otra
-#Devuelve False si no existe ningun camino entre las canciones
+'''
+Recibe un grafo con canciones y usuarios, la cancion de origen y donde se quiere llegar
+Devuelve una lista con el camino minimo entre las dos canciones
+'''
 def camino_minimo(grafo, cancion_origen, cancion_destino):
     visitados = set()
     visitados.add(cancion_origen)
@@ -81,6 +90,10 @@ def _ciclo_n_canciones(grafo_canciones, n, cancion_origen, cancion_actual, visit
     camino.pop()
     return False
 
+'''
+Recibe un grafo con canciones, la cancion donde se quiere comenzar y un numero n
+Devuelve una lista con un camino que sea un ciclo de exactamente n canciones
+'''
 def ciclo_n_canciones(grafo_canciones, n, cancion_origen):
     camino = []
     visitados = set()
@@ -88,6 +101,10 @@ def ciclo_n_canciones(grafo_canciones, n, cancion_origen):
     return False
 
 
+'''
+Recibe un grafo con canciones, un numero n y la cancion de origen
+Devuelve la cantidad de canciones que estan a un rango n de la misma
+'''
 def canciones_en_rango(grafo_canciones, n, cancion_origen):
     visitados = set()
     dist = {}
@@ -107,7 +124,9 @@ def canciones_en_rango(grafo_canciones, n, cancion_origen):
                 cola.encolar(w) 
     return cant_en_rango
     
-
+'''
+Recibe un grafo no dirigo, devuelve un diccionario con los grados de los vertices
+'''
 def obtener_grados(grafo):
     grados = {}
     for v in grafo.obtener_vertices():
@@ -115,7 +134,7 @@ def obtener_grados(grafo):
     for v in grafo.obtener_vertices():
         grados[v] = len(grafo.obtener_adyacentes(v))
     return grados
-
+'''
 #Devuelve la cantidad de adyacentes de v que estan relacionados con v
 def cantidad_relacionados(grafo, v):
     cant_relacionados = 0
@@ -123,55 +142,30 @@ def cantidad_relacionados(grafo, v):
         for k in grafo.obtener_adyacentes(w):
             if grafo.existe_arista(v, k): cant_relacionados += 1
     return cant_relacionados
+'''
+def cantidad_relacionados(grafo, v):
+    cant_relacionados = 0
+    aristas_contadas = set()
+    for w in grafo.obtener_adyacentes(v):
+        for k in grafo.obtener_adyacentes(v):
+            if grafo.existe_arista(w, k) and (k, w) not in aristas_contadas:
+                cant_relacionados += 1
+                aristas_contadas.add((w, k))
+    return cant_relacionados 
 
 CANT_DECIMALES = 3
 
 def clustering_cancion(grafo, grados, cancion):
     if grados[cancion] == 0: return 0
-    return round(((cantidad_relacionados(grafo, cancion))) / (grados[cancion] * (grados[cancion] - 1)), CANT_DECIMALES)
+    return round(2 * ((cantidad_relacionados(grafo, cancion))) / (grados[cancion] * (grados[cancion] - 1)), CANT_DECIMALES)
 
 
 def clustering_promedio(grafo, grados):
-    coeficientes = {}
     suma = 0
     for v in grafo.obtener_vertices():
         suma += clustering_cancion(grafo, grados, v)
     return suma / grafo.cantidad_vertices()
 
-
-'''
-#recibe el grafo de usuarios, una lista de canciones que le gustan y la cantidad de canciones a devolver (n)
-def recomendar_canciones(grafo, lista_canciones, n):
-    LARGO_CAMINO = CANT_ITERACIONES = 20
-    COEFICIENTE_INICIAL = 1 / grafo.cantidad_vertices()
-    page_rank = {} 
-    for c in lista_canciones:
-        if c not in page_rank:
-            page_rank[c] = [COEFICIENTE_INICIAL, c]
-        actualizar_page_rank(grafo, c, page_rank, LARGO_CAMINO, CANT_ITERACIONES)
-    page_rank_ordenado = (page_rank.values()).sort(key = lambda lista: lista_canciones[0])
-    page_rank_ordenado.reverse()
-    cant_recomendadas = 0
-    i=0
-    lista_recomendadas = []
-    while cant_recomendadas < n:
-       if not (page_rank_ordenado[i])[1] in lista_canciones:
-           lista_recomendadas.append((page_rank_ordenado[i])[1])
-           cant_recomendadas += 1
-        i += 1
-    return lista_recomendadas
-
-
-#Unica iteracion de PageRank comenzando del vertice V
-def grafo_page_rank(grafo, grados, v, largo_camino, page_rank):
-    if v not in page_rank: page_rank[v] = 0
-    for i in range(largo_camino):
-        if i == 0: valor_transmitido = 1 / grados[v]
-        else: valor_transmitido = page_rank[v] / grados[v]
-        v = grafo.adyacente_aleatorio(v)
-        if v not in page_rank: page_rank[v] = 0
-        page_rank[v] += valor_transmitido
-'''
 
 def actualizar_page_rank(grafo, v, grados, page_rank):
     LARGO_CAMINO = 30
