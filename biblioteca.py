@@ -164,7 +164,7 @@ def clustering_promedio(grafo, grados):
     suma = 0
     for v in grafo.obtener_vertices():
         suma += clustering_cancion(grafo, grados, v)
-    return suma / grafo.cantidad_vertices()
+    return round(suma / grafo.cantidad_vertices(), CANT_DECIMALES)
 
 
 def actualizar_page_rank(grafo, v, grados, page_rank):

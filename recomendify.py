@@ -116,10 +116,9 @@ grafo_completo, playlists = procesar_archivo(sys.argv[1])
 grados_completo = obtener_grados(grafo_completo)
 grafo_canciones = False
 lista_rankings = False
-#camino Don't Go Away - Oasis >>>> Quitter - Eminem
-#ciclo 7 By The Way - Red Hot Chili Peppers
-
+clustering_promedio = False
 #CAMBIAR ID POR V EN GRAFO.PY
+
 for linea in sys.stdin:
     comando = (linea.split(' '))[0]
     if comando == COMANDO_CAMINO:
@@ -151,9 +150,25 @@ for linea in sys.stdin:
         c = Cancion(cancion_artista[0], cancion_artista[1])
         mostrar_ciclo(grafo_canciones, n, c)
     elif comando == COMANDO_RANGO:
-        pass
+        if not grafo_canciones: grafo_canciones = cargar_canciones_playlists(playlists)
+        str_rango = linea.split(' ')
+        n = str_rango[1]
+        str_cancion = linea[(7+len(n)):-1]
+        n = int(n)
+        cancion_artista = str_cancion.split(' - ')
+        c = Cancion(cancion_artista[0], cancion_artista[1])
+        print(canciones_en_rango(grafo_canciones, n, c))
     elif comando == COMANDO_CLUSTERING:
-        pass
+        if not grafo_canciones:  grafo_canciones = cargar_canciones_playlists(playlists)
+        print("Grafo cargado")
+        if linea == COMANDO_CLUSTERING:
+            if not clustering_promedio: clustering = clustering_promedio(grafo_canciones, grados_completos)
+            print(clustering, 3)
+            continue
+        str_cancion = linea[11:-1]
+        cancion_artista = str_cancion.split(' - ')
+        c = Cancion(cancion_artista[0], cancion_artista[1])
+        print(clustering_cancion(grafo_canciones, grados_completo, c))
     else:
         print("Comando invalido")
 
