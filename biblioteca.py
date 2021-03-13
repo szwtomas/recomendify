@@ -21,6 +21,7 @@ Recibe un grafo de canciones, la cantidad de iteraciones a realizar (mientras ma
 Devuelve una lista ordenada con las canciones rankeadas, en forma de tupla (pagerank, cancion)
 '''
 def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_amortiguacion = AMORTIGUACION_DEFECTO):
+    # puede que el page_rank haya que cambiarlo, sumar el termino_amortiguacion una vez e ir sumando el otro, no pisandolo
     rankings = {}
     for cancion in grafo.obtener_vertices():
         rankings[cancion] = 1 / grafo.cantidad_vertices()
@@ -146,18 +147,21 @@ def cantidad_relacionados(grafo, v):
 def cantidad_relacionados(grafo, v):
     cant_relacionados = 0
     aristas_contadas = set()
+    grados_salida = len(grafo.obtener_adyacentes(v))
+    if grados_salida < 2: return 0
     for w in grafo.obtener_adyacentes(v):
+        aristas_contadas.add(w)
         for k in grafo.obtener_adyacentes(v):
-            if grafo.existe_arista(w, k) and (k, w) not in aristas_contadas:
+            if k not in aristas_contadas and grafo.existe_arista(w, k): 
                 cant_relacionados += 1
-                aristas_contadas.add((w, k))
     return cant_relacionados 
 
 CANT_DECIMALES = 3
 
 def clustering_cancion(grafo, grados, cancion):
-    if grados[cancion] == 0: return 0
-    return round(2 * ((cantidad_relacionados(grafo, cancion))) / (grados[cancion] * (grados[cancion] - 1)), CANT_DECIMALES)
+    if len(grafo.obtener_adyacentes(cancion)) == 0: return 0
+    if len(grafo.obtener_adyacentes(cancion)) < 2: return 0
+    return round(2 * ((cantidad_relacionados(grafo, cancion))) / (len(grafo.obtener_adyacentes(cancion)) * (len(grafo.obtener_adyacentes(cancion)) - 1)), CANT_DECIMALES)
 
 
 def clustering_promedio(grafo, grados):
@@ -192,7 +196,7 @@ def recomendar(grafo, lista_gustos, n, grados, rec_canciones = True):
         if rec_canciones and isinstance(key, Cancion): #Si quiero canciones y la entrada es una cancion
             if key not in lista_gustos: entradas_rankeadas.append((page_rank[key], key))
         elif (not rec_canciones) and isinstance(key, Usuario): #Si quiero usuarios y la entrada es un usuario
-            if key not in lista_gustos: entradas_rankeadas.append((page[key], key))
+            if key not in lista_gustos: entradas_rankeadas.append((page_rank[key], key))
     entradas_rankeadas.sort(key = lambda tupla: tupla[0])
     entradas_rankeadas.reverse()
     print(len(entradas_rankeadas))

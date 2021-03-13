@@ -116,7 +116,7 @@ grafo_completo, playlists = procesar_archivo(sys.argv[1])
 grados_completo = obtener_grados(grafo_completo)
 grafo_canciones = False
 lista_rankings = False
-clustering_promedio = False
+_clustering_promedio = False
 #CAMBIAR ID POR V EN GRAFO.PY
 
 for linea in sys.stdin:
@@ -162,7 +162,7 @@ for linea in sys.stdin:
         if not grafo_canciones:  grafo_canciones = cargar_canciones_playlists(playlists)
         print("Grafo cargado")
         if linea == COMANDO_CLUSTERING:
-            if not clustering_promedio: clustering = clustering_promedio(grafo_canciones, grados_completos)
+            if not _clustering_promedio: clustering = clustering_promedio(grafo_canciones, grados_completo)
             print(clustering, 3)
             continue
         str_cancion = linea[11:-1]

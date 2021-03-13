@@ -26,7 +26,7 @@ class Cancion:
     Devuelve una lista con los generos de la cancion
     '''
     def obtener_generos(self):
-        return generos
+        return self.generos
 
     '''
     Dos canciones son iguales si coincide el nombre de la cancion y del artista
@@ -84,7 +84,7 @@ class Playlist:
     Borra la primera aparicion de la cancion indicada de la playlist
     '''
     def borrar_cancion(self, cancion):
-        self.canciones.remove(c)
+        self.canciones.remove(cancion)
 
 
 class Usuario:
