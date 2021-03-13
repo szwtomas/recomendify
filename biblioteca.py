@@ -11,8 +11,8 @@ Devuelve el ranking de la presente iteracion de la cancion
 def ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings):
     termino_amortiguacion = (1 - coeficiente_amortiguacion) / grafo.cantidad_vertices()
     termino_ranking = 0
-    for ady in grafo.obtener_adyacentes(cancion):
-        termino_ranking += rankings[ady] / len(grafo.obtener_adyacentes(ady))
+    for w in grafo.obtener_adyacentes(cancion):
+        termino_ranking += rankings[w] / grafo.cantidad_adyacentes(w)
     return termino_amortiguacion + coeficiente_amortiguacion * termino_ranking
 
 '''
@@ -21,20 +21,20 @@ Recibe un grafo de canciones, la cantidad de iteraciones a realizar (mientras ma
 Devuelve una lista ordenada con las canciones rankeadas, en forma de tupla (pagerank, cancion)
 '''
 def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_amortiguacion = AMORTIGUACION_DEFECTO):
-    # puede que el page_rank haya que cambiarlo, sumar el termino_amortiguacion una vez e ir sumando el otro, no pisandolo
-    rankings = {}
+    rankings_act = {}
     for cancion in grafo.obtener_vertices():
-        rankings[cancion] = 1 / grafo.cantidad_vertices()
+        rankings_act[cancion] = 1 / grafo.cantidad_vertices()
+    rankings_vuelta = rankings_act.copy()
     for i in range(iteraciones):
         for cancion in grafo.obtener_vertices(): 
-            rankings[cancion] = ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings)
+            rankings_vuelta[cancion] = ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings_act)
+        rankings_act = rankings_vuelta.copy()
     lista_rankings = []
-    for cancion in rankings:
-        lista_rankings.append((rankings[cancion], cancion))
+    for cancion in rankings_act:
+        lista_rankings.append((rankings_act[cancion], cancion))
     lista_rankings.sort(key = lambda tupla: tupla[0])
     lista_rankings.reverse()
     return lista_rankings
-
 
 
 '''
@@ -54,6 +54,7 @@ def reecontrstruir_camino(padres, destino):
 Recibe un grafo con canciones y usuarios, la cancion de origen y donde se quiere llegar
 Devuelve una lista con el camino minimo entre las dos canciones
 '''
+
 def camino_minimo(grafo, cancion_origen, cancion_destino):
     visitados = set()
     visitados.add(cancion_origen)
@@ -68,7 +69,7 @@ def camino_minimo(grafo, cancion_origen, cancion_destino):
                 visitados.add(w)
                 padres[w] = v
                 cola.encolar(w)
-                if isinstance(w, Cancion) and w == cancion_destino:
+                if w == cancion_destino:
                     return reecontrstruir_camino(padres, cancion_destino)
     return False
 
@@ -159,7 +160,6 @@ def cantidad_relacionados(grafo, v):
 CANT_DECIMALES = 3
 
 def clustering_cancion(grafo, grados, cancion):
-    if len(grafo.obtener_adyacentes(cancion)) == 0: return 0
     if len(grafo.obtener_adyacentes(cancion)) < 2: return 0
     return round(2 * ((cantidad_relacionados(grafo, cancion))) / (len(grafo.obtener_adyacentes(cancion)) * (len(grafo.obtener_adyacentes(cancion)) - 1)), CANT_DECIMALES)
 
@@ -169,6 +169,7 @@ def clustering_promedio(grafo, grados):
     for v in grafo.obtener_vertices():
         suma += clustering_cancion(grafo, grados, v)
     return round(suma / grafo.cantidad_vertices(), CANT_DECIMALES)
+
 
 
 def actualizar_page_rank(grafo, v, grados, page_rank):
@@ -199,7 +200,6 @@ def recomendar(grafo, lista_gustos, n, grados, rec_canciones = True):
             if key not in lista_gustos: entradas_rankeadas.append((page_rank[key], key))
     entradas_rankeadas.sort(key = lambda tupla: tupla[0])
     entradas_rankeadas.reverse()
-    print(len(entradas_rankeadas))
     for i in range(n):
         recomendaciones.append((entradas_rankeadas[i])[1])
     return recomendaciones

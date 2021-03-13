@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys
 from grafo import *
 from biblioteca import recomendar, page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango, clustering_promedio, clustering_cancion, obtener_grados
@@ -16,21 +17,20 @@ def procesar_archivo(ruta_archivo):
         for linea in archivo:
             entrada = linea.split(SEPARADOR)
             if entrada[0] == "ID": continue
-            #if len(entrada) != 7: continue #SACAR!!!
             c = Cancion(entrada[2], entrada[3], entrada[6].split(","))
             p = Playlist(entrada[5], int(entrada[4]))
             if not canciones_usuarios.existe_vertice(c):
                 canciones_usuarios.agregar_vertice(c)
-            if p.obtener_id() not in playlists:
-                playlists[p.obtener_id()] = p
-            playlists[p.obtener_id()].agregar_cancion(c)
+            if p.obtener_nombre() not in playlists:
+                playlists[p.obtener_nombre()] = p
+            playlists[p.obtener_nombre()].agregar_cancion(c)
             if entrada[1] not in usuarios:
                 usuarios[entrada[1]] = Usuario(entrada[1])
-            if not usuarios[entrada[1]].tiene_playlist(p.obtener_id()):
-                usuarios[entrada[1]].agregar_playlist(p.obtener_id())
+            if not usuarios[entrada[1]].tiene_playlist(p.obtener_nombre()):
+                usuarios[entrada[1]].agregar_playlist(p.obtener_nombre())
         for u in usuarios:
             canciones_usuarios.agregar_vertice(usuarios[u])
-            for p in usuarios[u].obtener_id_playlists():
+            for p in usuarios[u].obtener_nombres_playlists():
                 for c in playlists[p].obtener_canciones():
                     if not canciones_usuarios.existe_arista(usuarios[u], c):
                         canciones_usuarios.agregar_arista(usuarios[u], c) 
@@ -49,6 +49,12 @@ def cargar_canciones_playlists(playlists):
                     grafo_playlists.agregar_arista(canciones_playlist[i], canciones_playlist[j])
     return grafo_playlists
 
+'''
+def cargar_canciones_playlists(playlist):
+    grafo_playlists = Grafo(False)
+    for p in playlists:
+        canciones_playlist = playlists[p].obtener_canciones()   
+'''
 
 def imprimir_camino(camino, playlists):
     print(camino[0].obtener_nombre_cancion() + " - " + camino[0].obtener_artista(), end=" --> ")
@@ -110,20 +116,25 @@ COMANDO_RANGO = "rango"
 COMANDO_CLUSTERING = "clustering"
 
 
-
 if len(sys.argv) != 2:  raise ValueError("Error, cantidad de parametros distinta de 2")
 grafo_completo, playlists = procesar_archivo(sys.argv[1])
 grados_completo = obtener_grados(grafo_completo)
+grados_canciones = False
 grafo_canciones = False
 lista_rankings = False
-_clustering_promedio = False
-#CAMBIAR ID POR V EN GRAFO.PY
+clustering_prom = False
+
+
 
 for linea in sys.stdin:
     comando = (linea.split(' '))[0]
+    if(len(linea.split(' ')) == 1): comando = comando[:-1] #Para sacar el \n
     if comando == COMANDO_CAMINO:
         str_canciones = linea[7:-1]
         canciones = str_canciones.split(' >>>> ')
+        if len(canciones) != 2:
+            print("Se deben ingresar 2 canciones")
+            continue
         cancion_leida = canciones[0].split(' - ')
         cancion_origen = Cancion(cancion_leida[0], cancion_leida[1])
         cancion_leida = canciones[1].split(' - ')
@@ -132,16 +143,45 @@ for linea in sys.stdin:
     elif comando == COMANDO_IMPORTANTES:
         str_importantes = linea.split(' ')
         n = int(str_importantes[1])
-        if not grafo_canciones: grafo_canciones = cargar_canciones_playlists(playlists)
+        if not grafo_canciones:
+            grafo_canciones = cargar_canciones_playlists(playlists)
+            grados_canciones = obtener_grados(grafo_canciones)
         if not lista_rankings: lista_rankings = page_rank_canciones(grafo_canciones)
         for i in range(n):
             c = (lista_rankings[i])[1]
             if i != (n - 1): print(c.obtener_nombre_cancion() + ' - ' + c.obtener_artista(), end = '; ')
             else: print(c.obtener_nombre_cancion() + ' - ' + c.obtener_artista())
     elif comando == COMANDO_RECOMENDACION:
-        pass
+        str_linea = linea.split(' ')
+        es_cancion = str_linea[1]
+        n = str_linea[2]
+        str_linea = linea[16 + len(es_cancion) + len(n):-1]
+        str_canciones = str_linea.split(' >>>> ')
+        canciones = []
+        for s in str_canciones:
+            canciones_artista = s.split(' - ')
+            canciones.append(Cancion(canciones_artista[0], canciones_artista[1]))
+        n = int(n)
+        if es_cancion == "canciones": es_cancion = True
+        elif es_cancion == "usuarios": es_cancion = False
+        else: 
+            print("Comando invalido")
+            continue
+        lista_recomendaciones = recomendar(grafo_completo, canciones, n, grados_completo, es_cancion)
+        if es_cancion:
+            for i in range(n):
+                c = lista_recomendaciones[i]
+                if i != (n - 1): print(c.obtener_nombre_cancion() + ' - ' + c.obtener_artista(), end = '; ')
+                else: print(c.obtener_nombre_cancion() + ' - ' + c.obtener_artista())
+        else:
+            for i in range(n):
+                u = lista_recomendaciones[i]
+                if i != (n - 1): print(u.obtener_nombre(), end="; ")
+                else: print(u.obtener_nombre())
     elif comando == COMANDO_CICLO:
-        if not grafo_canciones: grafo_canciones = cargar_canciones_playlists(playlists)
+        if not grafo_canciones:
+            grafo_canciones = cargar_canciones_playlists(playlists)
+            grados_canciones = obtener_grados(grafo_canciones)
         str_ciclo = linea.split(' ')
         n = str_ciclo[1]
         str_cancion = linea[(7+len(n)): -1]
@@ -150,7 +190,9 @@ for linea in sys.stdin:
         c = Cancion(cancion_artista[0], cancion_artista[1])
         mostrar_ciclo(grafo_canciones, n, c)
     elif comando == COMANDO_RANGO:
-        if not grafo_canciones: grafo_canciones = cargar_canciones_playlists(playlists)
+        if not grafo_canciones:
+            grafo_canciones = cargar_canciones_playlists(playlists)
+            grados_canciones = obtener_grados(grafo_canciones)
         str_rango = linea.split(' ')
         n = str_rango[1]
         str_cancion = linea[(7+len(n)):-1]
@@ -159,16 +201,17 @@ for linea in sys.stdin:
         c = Cancion(cancion_artista[0], cancion_artista[1])
         print(canciones_en_rango(grafo_canciones, n, c))
     elif comando == COMANDO_CLUSTERING:
-        if not grafo_canciones:  grafo_canciones = cargar_canciones_playlists(playlists)
-        print("Grafo cargado")
-        if linea == COMANDO_CLUSTERING:
-            if not _clustering_promedio: clustering = clustering_promedio(grafo_canciones, grados_completo)
-            print(clustering, 3)
+        if not grafo_canciones:
+            grafo_canciones = cargar_canciones_playlists(playlists)
+            grados_canciones = obtener_grados(grafo_canciones)
+        if len(linea.split(' ')) == 1:
+            if not clustering_prom: clustering_prom = clustering_promedio(grafo_canciones, grados_canciones)
+            print(clustering_prom)
             continue
         str_cancion = linea[11:-1]
         cancion_artista = str_cancion.split(' - ')
         c = Cancion(cancion_artista[0], cancion_artista[1])
-        print(clustering_cancion(grafo_canciones, grados_completo, c))
+        print(clustering_cancion(grafo_canciones, grados_canciones, c)) #Sacar len(adyacentes)
     else:
         print("Comando invalido")
 

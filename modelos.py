@@ -32,7 +32,7 @@ class Cancion:
     Dos canciones son iguales si coincide el nombre de la cancion y del artista
     '''
     def __eq__(self, other):
-        if type(self) is not type(other): return False
+        if not isinstance(other, Cancion): return False
         return self.nombre_cancion == other.nombre_cancion and self.artista == other.artista
 
     def __hash__(self):
@@ -94,7 +94,7 @@ class Usuario:
     '''
     def __init__(self, nombre):
         self.nombre = nombre
-        self.playlists = [] #Lista con los IDs de las playlist del usuario
+        self.playlists = [] #Lista con los nombres de las playlist del usuario
 
     '''
     Devuelve el username del usuario
@@ -105,7 +105,7 @@ class Usuario:
     '''
     Devuelve una lista con los id's de las playlists del usuarios
     '''
-    def obtener_id_playlists(self):
+    def obtener_nombres_playlists(self):
         return self.playlists
 
     '''
@@ -119,7 +119,7 @@ class Usuario:
     En caso de no existir entre las listas del usuario, devuelve -1
     '''
     def obtener_playlist_cancion(self, cancion_buscada, playlists):
-        for p in self.obtener_id_playlists():
+        for p in self.obtener_nombres_playlists():
             for c in playlists[p].obtener_canciones():
                 if c == cancion_buscada:
                     return p
@@ -135,6 +135,7 @@ class Usuario:
 
 
     def __eq__(self, other):
+        if not isinstance(other, Usuario): return False
         return self.nombre == other.obtener_nombre()
 
     def __hash__(self):

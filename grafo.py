@@ -46,6 +46,7 @@ class Grafo:
     def obtener_adyacentes(self, v):
         return self.vertices[v].keys()
 
+    #Devuelve la cantidad de adyacentes de un vertice v
     def cantidad_adyacentes(self, v):
         return len(self.vertices[v])
 
