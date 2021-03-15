@@ -8,6 +8,7 @@ from modelos import *
 Devuelve un grafo bipartito que relaciona un usuario con una cancion si la tiene en alguna playlsit
 y un diccionario con las playlists, las keys son el id de la playlist y guarda una lista con las canciones
 '''
+'''
 def procesar_archivo(ruta_archivo):
     SEPARADOR = "\t"
     canciones_usuarios = Grafo(False) 
@@ -18,6 +19,7 @@ def procesar_archivo(ruta_archivo):
             entrada = linea.split(SEPARADOR)
             if entrada[0] == "ID": continue
             c = Cancion(entrada[2], entrada[3], entrada[6].split(","))
+            #c = Cancion(entrada[2], entrada[3])
             p = Playlist(entrada[5], int(entrada[4]))
             if not canciones_usuarios.existe_vertice(c):
                 canciones_usuarios.agregar_vertice(c)
@@ -28,13 +30,47 @@ def procesar_archivo(ruta_archivo):
                 usuarios[entrada[1]] = Usuario(entrada[1])
             if not usuarios[entrada[1]].tiene_playlist(p.obtener_id()):
                 usuarios[entrada[1]].agregar_playlist(p.obtener_id())
-        for u in usuarios:
-            if not canciones_usuarios.existe_vertice(u):
-                canciones_usuarios.agregar_vertice(usuarios[u])
-            for p in usuarios[u].obtener_ids_playlists():
-                for c in playlists[p].obtener_canciones():
-                    if not canciones_usuarios.existe_arista(usuarios[u], c):
-                        canciones_usuarios.agregar_arista(usuarios[u], c) 
+    for u in usuarios:
+        if not canciones_usuarios.existe_vertice(u):
+            canciones_usuarios.agregar_vertice(usuarios[u])
+        for p in usuarios[u].obtener_ids_playlists():
+            for c in playlists[p].obtener_canciones():
+                if not canciones_usuarios.existe_arista(usuarios[u], c):
+                    canciones_usuarios.agregar_arista(usuarios[u], c) 
+    return canciones_usuarios, playlists
+
+'''
+
+
+
+def _procesar_archivo(ruta_archivo):
+    SEPARADOR = "\t"
+    canciones_usuarios = Grafo(False) 
+    playlists = {} #Guarda playlists con su nombre como key, y la instancia de la playlist como dato
+    usuarios = {} #Guarda usuarios con su nombre de usuario como key, la instancia del user como dato
+    with open(ruta_archivo, "r") as archivo:
+        for linea in archivo:
+            entrada = linea.split(SEPARADOR)
+            if entrada[0] == "ID": continue
+            c = Cancion(entrada[2], entrada[3], entrada[6].split(","))
+            #c = Cancion(entrada[2], entrada[3])
+            p = Playlist(entrada[5], int(entrada[4]))
+            if not canciones_usuarios.existe_vertice(c):
+                canciones_usuarios.agregar_vertice(c)
+            if (p.obtener_nombre(), entrada[1]) not in playlists:
+                playlists[(p.obtener_nombre(), entrada[1])] = p
+            playlists[(p.obtener_nombre(), entrada[1])].agregar_cancion(c)
+            if entrada[1] not in usuarios:
+                usuarios[entrada[1]] = Usuario(entrada[1])
+            if not usuarios[entrada[1]].tiene_playlist(p.obtener_nombre()):
+                usuarios[entrada[1]].agregar_playlist(p.obtener_nombre())
+    for u in usuarios:
+        if not canciones_usuarios.existe_vertice(u):
+            canciones_usuarios.agregar_vertice(usuarios[u])
+        for p in usuarios[u].obtener_nombres_playlists():
+            for c in playlists[(p, u)].obtener_canciones():
+                if not canciones_usuarios.existe_arista(usuarios[u], c):
+                    canciones_usuarios.agregar_arista(usuarios[u], c) 
     return canciones_usuarios, playlists
 
 
@@ -50,6 +86,7 @@ def cargar_canciones_playlists(playlists):
                     grafo_playlists.agregar_arista(canciones_playlist[i], canciones_playlist[j])
     return grafo_playlists
 
+
 '''
 def cargar_canciones_playlists(playlist):
     grafo_playlists = Grafo(False)
@@ -62,11 +99,11 @@ def imprimir_camino(camino, playlists):
     for i in range(1, len(camino) - 1):
         if isinstance(camino[i], Cancion): continue
         print("aparece en playlist", end=" --> ")
-        print(playlists[camino[i].obtener_playlist_cancion(camino[i-1], playlists)].obtener_nombre(), end=" --> ")
+        print(playlists[(camino[i].obtener_playlist_cancion(camino[i-1], playlists), camino[i].obtener_nombre())].obtener_nombre(), end=" --> ")
         print("de", end=" --> ")
         print(camino[i].obtener_nombre(), end=" --> ")
         print("tiene una playlist", end = " --> ")
-        print(playlists[camino[i].obtener_playlist_cancion(camino[i+1], playlists)].obtener_nombre(), end=" --> ")
+        print(playlists[(camino[i].obtener_playlist_cancion(camino[i+1], playlists), camino[i].obtener_nombre())].obtener_nombre(), end=" --> ")
         print("donde aparece", end=" --> ")
         if i != (len(camino) - 2): print(camino[i+1].obtener_nombre_cancion() + " - " + camino[i+1].obtener_artista(), end=" --> ")
         else: print(camino[i+1].obtener_nombre_cancion() + " - " + camino[i+1].obtener_artista())
@@ -75,7 +112,7 @@ def imprimir_camino(camino, playlists):
 Recibe el grafo de usuarios, la cancion en la cual empieza el camino, la cancion a la que se quiere llegar
 y un diccionario con todas las playlists por id
 '''
-def camino_canciones_usuarios(grafo_usuarios, cancion_origen, cancion_destino, playlists):
+def camino_canciones_usuarios(grafo_usuarios, cancion_origen, cancion_destino):
     existe_origen = False
     existe_destino = False
     for v in grafo_usuarios.obtener_vertices():
@@ -116,7 +153,7 @@ COMANDO_CLUSTERING = "clustering"
 
 
 if len(sys.argv) != 2:  raise ValueError("Error, cantidad de parametros distinta de 2")
-grafo_completo, playlists = procesar_archivo(sys.argv[1])
+grafo_completo, playlists = _procesar_archivo(sys.argv[1])
 grados_completo = obtener_grados(grafo_completo)
 grados_canciones = False
 grafo_canciones = False
@@ -144,7 +181,7 @@ for linea in sys.stdin:
             print("Tanto el origen como el destino deben ser canciones")
             continue
         cancion_destino = Cancion(cancion_leida[0], cancion_leida[1]) 
-        existe_camino, camino = camino_canciones_usuarios(grafo_completo, cancion_origen, cancion_destino, playlists)
+        existe_camino, camino = camino_canciones_usuarios(grafo_completo, cancion_origen, cancion_destino)
         if existe_camino: 
             imprimir_camino(camino, playlists)
     elif comando == COMANDO_IMPORTANTES:
@@ -218,8 +255,11 @@ for linea in sys.stdin:
         str_cancion = linea[11:-1]
         cancion_artista = str_cancion.split(' - ')
         c = Cancion(cancion_artista[0], cancion_artista[1])
-        if not grafo_canciones.existe_vertice(c): print("0000") # No esta encontrando la cancion
-        else: print(clustering_cancion(grafo_canciones, grados_canciones, c)) # Sacar len(adyacentes)
+        if not grafo_completo.existe_vertice(c): raise ValueError("No esta en grafo completo")
+        if not grafo_canciones.existe_vertice(c): 
+            print("0000") # No esta encontrando la cancion
+            raise ValueError("No esta en el grafo canciones")
+        else: print(clustering_cancion(grafo_canciones, grados_canciones, c))
     else:
         print("Comando invalido")
 

@@ -1,4 +1,13 @@
 
+'''
+def mismos_generos(generos_1, generos_2):
+    if len(generos_1) != len(generos_2): return False
+    for g in generos_1:
+        if g not in generos_2:
+            return False
+    return True
+'''
+
 class Cancion:
 
     '''
@@ -29,7 +38,7 @@ class Cancion:
         return self.generos
 
     '''
-    Dos canciones son iguales si coincide el nombre de la cancion y del artista
+    Dos canciones son iguales si coincide el nombre de la cancion, el artista y los generos
     '''
     def __eq__(self, other):
         if not isinstance(other, Cancion): return False
@@ -45,9 +54,10 @@ class Playlist:
     '''
     Constructor de tipo Playlist. Recibe el nombre de la misma y un identificador
     '''
-    def __init__(self, nombre, id):
+    def __init__(self, nombre, id, usuario = None):
         self.nombre = nombre
         self.id = id
+        self.usuario = usuario
         self.canciones = []
 
     '''
@@ -86,7 +96,14 @@ class Playlist:
     def borrar_cancion(self, cancion):
         self.canciones.remove(cancion)
 
+'''
+    def __eq__(self, other):
+        if not isinstance(other, Playlist): return False
+        return self.nombre == other.nombre and self.usuario == other.usuario
 
+    def __hash__(self):
+        return hash(self.nombre)
+'''
 class Usuario:
 
     '''
@@ -105,9 +122,10 @@ class Usuario:
     '''
     Devuelve una lista con los id's de las playlists del usuarios
     '''
+    '''
     def obtener_ids_playlists(self):
         return self.playlists
-
+    '''
 
     def obtener_nombres_playlists(self):
         return self.playlists
@@ -124,7 +142,7 @@ class Usuario:
     '''
     def obtener_playlist_cancion(self, cancion_buscada, playlists):
         for p in self.obtener_nombres_playlists():
-            for c in playlists[p].obtener_canciones():
+            for c in playlists[(p, self.nombre)].obtener_canciones():
                 if c == cancion_buscada:
                     return p
         return -1
