@@ -1,6 +1,7 @@
 
+import csv
 
-dic = {}
-dic[("a", 2)] = 4
-
-print(("a", 2) in dic)
+with open("spotify-mini.tsv") as tsvfile:
+    tsvreader = csv.reader(tsvfile, delimiter="\t")
+    for linea in tsvreader:
+        print(linea[1:])

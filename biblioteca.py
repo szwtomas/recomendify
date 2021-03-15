@@ -33,7 +33,6 @@ def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_am
     for cancion in rankings_act:
         lista_rankings.append((rankings_act[cancion], cancion))
     lista_rankings.sort(key = lambda tupla: tupla[0], reverse=True)
-    #lista_rankings.reverse()
     lista_rankings_final = []
     for c_u in lista_rankings:
         if isinstance(c_u[1], Cancion): lista_rankings_final.append(c_u)
