@@ -1,50 +1,17 @@
 #!/usr/bin/python3
 import sys
+import csv
 from grafo import *
-from biblioteca import recomendar, page_rank_canciones, camino_minimo, ciclo_n_canciones, canciones_en_rango, clustering_promedio, clustering_cancion, obtener_grados
 from modelos import *
 from comandos import comando_recomendaciones, comando_clustering, comando_camino, comando_mas_importantes, comando_canciones_rango, comando_ciclo_canciones
+from biblioteca import obtener_grados
 
 '''
 Devuelve un grafo bipartito que relaciona un usuario con una cancion si la tiene en alguna playlsit
-y un diccionario con las playlists, las keys son el id de la playlist y guarda una lista con las canciones
-'''
+y un diccionario con las playlists, las keys son de la forma (nombre_playlist, usuario)
+y guarda como dato la instancia de playlist
 '''
 def procesar_archivo(ruta_archivo):
-    SEPARADOR = "\t"
-    canciones_usuarios = Grafo(False) 
-    playlists = {} #Guarda playlists con su id como key, y la instancia de la playlist como dato
-    usuarios = {} #Guarda usuarios con su nombre de usuario como key, la instancia del user como dato
-    with open(ruta_archivo, "r") as archivo:
-        for linea in archivo:
-            entrada = linea.split(SEPARADOR)
-            if entrada[0] == "ID": continue
-            c = Cancion(entrada[2], entrada[3], entrada[6].split(","))
-            #c = Cancion(entrada[2], entrada[3])
-            p = Playlist(entrada[5], int(entrada[4]))
-            if not canciones_usuarios.existe_vertice(c):
-                canciones_usuarios.agregar_vertice(c)
-            if p.obtener_id() not in playlists:
-                playlists[p.obtener_id()] = p
-            playlists[p.obtener_id()].agregar_cancion(c)
-            if entrada[1] not in usuarios:
-                usuarios[entrada[1]] = Usuario(entrada[1])
-            if not usuarios[entrada[1]].tiene_playlist(p.obtener_id()):
-                usuarios[entrada[1]].agregar_playlist(p.obtener_id())
-    for u in usuarios:
-        if not canciones_usuarios.existe_vertice(u):
-            canciones_usuarios.agregar_vertice(usuarios[u])
-        for p in usuarios[u].obtener_ids_playlists():
-            for c in playlists[p].obtener_canciones():
-                if not canciones_usuarios.existe_arista(usuarios[u], c):
-                    canciones_usuarios.agregar_arista(usuarios[u], c) 
-    return canciones_usuarios, playlists
-
-'''
-
-
-import csv
-def _procesar_archivo(ruta_archivo):
     SEPARADOR = "\t"
     canciones_usuarios = Grafo(False) 
     playlists = {} #Guarda playlists con su nombre como key, y la instancia de la playlist como dato
@@ -52,11 +19,9 @@ def _procesar_archivo(ruta_archivo):
     with open(ruta_archivo, "r") as archivo:
         tsvreader = csv.reader(archivo, delimiter=SEPARADOR)
         for entrada in tsvreader:
-            #entrada = linea.split(SEPARADOR)
             if entrada[0] == "ID": continue
             c = Cancion(entrada[2], entrada[3], entrada[6].split(","))
-            #c = Cancion(entrada[2], entrada[3])
-            p = Playlist(entrada[5], int(entrada[4]))
+            p = Playlist(entrada[5], entrada[4])
             if not canciones_usuarios.existe_vertice(c):
                 canciones_usuarios.agregar_vertice(c)
             if (p.obtener_nombre(), entrada[1]) not in playlists:
@@ -76,6 +41,10 @@ def _procesar_archivo(ruta_archivo):
     return canciones_usuarios, playlists
 
 
+'''
+Recibe un diccionario con todas las playlists, devuelve un grafo no dirigido y no pesado donde un par
+de canciones tienen una arista si comparten al menos una playlist.
+'''
 def cargar_canciones_playlists(playlists):
     grafo_playlists = Grafo(False)
     for p in playlists:
@@ -98,15 +67,15 @@ COMANDO_CLUSTERING = "clustering"
 
 
 if len(sys.argv) != 2:  raise ValueError("Error, cantidad de parametros distinta de 2")
-grafo_completo, playlists = _procesar_archivo(sys.argv[1])
+grafo_completo, playlists = procesar_archivo(sys.argv[1])
 grados_completo = obtener_grados(grafo_completo)
 grados_canciones = False
 grafo_canciones = False
 lista_rankings = False
 clustering_prom = False
 for linea in sys.stdin:
+    linea = linea.strip()
     comando = (linea.split(' '))[0]
-    if(len(linea.split(' ')) == 1): comando = comando[:-1] #Para sacar el \n
     if comando == COMANDO_CAMINO:
         comando_camino(grafo_completo, playlists, linea)
     elif comando == COMANDO_IMPORTANTES:

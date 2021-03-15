@@ -96,14 +96,7 @@ class Playlist:
     def borrar_cancion(self, cancion):
         self.canciones.remove(cancion)
 
-'''
-    def __eq__(self, other):
-        if not isinstance(other, Playlist): return False
-        return self.nombre == other.nombre and self.usuario == other.usuario
 
-    def __hash__(self):
-        return hash(self.nombre)
-'''
 class Usuario:
 
     '''
