@@ -105,6 +105,10 @@ class Usuario:
     '''
     Devuelve una lista con los id's de las playlists del usuarios
     '''
+    def obtener_ids_playlists(self):
+        return self.playlists
+
+
     def obtener_nombres_playlists(self):
         return self.playlists
 
@@ -126,11 +130,11 @@ class Usuario:
         return -1
 
     '''
-    Devuelve True si el usuario tiene una playlist con el id pasado, False si no la tiene
+    Devuelve True si el usuario tiene una playlist con el nombre pasado, False si no la tiene
     '''
-    def tiene_playlist(self, id):
+    def tiene_playlist(self, nombre):
         for p in self.playlists:
-            if id == p: return True
+            if nombre == p: return True
         return False
 
 

@@ -1,7 +1,7 @@
 from cola import Cola
 from modelos import *
 
-ITERACIONES_DEFECTO = 6
+ITERACIONES_DEFECTO = 2
 AMORTIGUACION_DEFECTO = 0.85
 
 '''
@@ -24,17 +24,20 @@ def page_rank_canciones(grafo, iteraciones = ITERACIONES_DEFECTO, coeficiente_am
     rankings_act = {}
     for cancion in grafo.obtener_vertices():
         rankings_act[cancion] = 1 / grafo.cantidad_vertices()
-    rankings_vuelta = rankings_act.copy()
+    rankings_vuelta = rankings_act
     for i in range(iteraciones):
         for cancion in grafo.obtener_vertices(): 
             rankings_vuelta[cancion] = ranking_cancion(grafo, coeficiente_amortiguacion, cancion, rankings_act)
-        rankings_act = rankings_vuelta.copy()
+        rankings_act = rankings_vuelta
     lista_rankings = []
     for cancion in rankings_act:
         lista_rankings.append((rankings_act[cancion], cancion))
-    lista_rankings.sort(key = lambda tupla: tupla[0])
-    lista_rankings.reverse()
-    return lista_rankings
+    lista_rankings.sort(key = lambda tupla: tupla[0], reverse=True)
+    #lista_rankings.reverse()
+    lista_rankings_final = []
+    for c_u in lista_rankings:
+        if isinstance(c_u[1], Cancion): lista_rankings_final.append(c_u)
+    return lista_rankings_final
 
 
 '''
@@ -77,7 +80,7 @@ def camino_minimo(grafo, cancion_origen, cancion_destino):
 def _ciclo_n_canciones(grafo_canciones, n, cancion_origen, cancion_actual, visitados, camino):
     visitados.add(cancion_actual)
     camino.append(cancion_actual)
-    if len(camino) == n:
+    if len(camino) == n and len(camino) != 1:
         for w in grafo_canciones.obtener_adyacentes(cancion_actual):
             if w == cancion_origen:
                 camino.append(w)
@@ -109,6 +112,27 @@ Devuelve la cantidad de canciones que estan a un rango n de la misma
 '''
 def canciones_en_rango(grafo_canciones, n, cancion_origen):
     visitados = set()
+    visitados.add(cancion_origen)
+    padres = {}
+    padres[cancion_origen] = None
+    cola = Cola()
+    cola.encolar(cancion_origen)
+    dist = {}
+    dist[cancion_origen] = 0
+    while not cola.esta_vacia():
+        v = cola.desencolar()
+        for w in grafo_canciones.obtener_adyacentes(v):
+            if w not in visitados:
+                visitados.add(w)
+                padres[w] = v
+                cola.encolar(w)
+                dist[w] = dist[v] + 1
+    cant_en_rango = 0
+    for c in dist:
+        if dist[c] == n: cant_en_rango += 1
+    return cant_en_rango
+    """
+    visitados = set()
     dist = {}
     dist[cancion_origen] = 0
     visitados.add(cancion_origen)
@@ -125,6 +149,7 @@ def canciones_en_rango(grafo_canciones, n, cancion_origen):
                 if dist[w] == n: cant_en_rango += 1
                 cola.encolar(w) 
     return cant_en_rango
+    """
     
 '''
 Recibe un grafo no dirigo, devuelve un diccionario con los grados de los vertices
@@ -147,21 +172,18 @@ def cantidad_relacionados(grafo, v):
 '''
 def cantidad_relacionados(grafo, v):
     cant_relacionados = 0
-    aristas_contadas = set()
-    grados_salida = len(grafo.obtener_adyacentes(v))
-    if grados_salida < 2: return 0
     for w in grafo.obtener_adyacentes(v):
-        aristas_contadas.add(w)
         for k in grafo.obtener_adyacentes(v):
-            if k not in aristas_contadas and grafo.existe_arista(w, k): 
+            if grafo.existe_arista(w, k): 
                 cant_relacionados += 1
     return cant_relacionados 
 
 CANT_DECIMALES = 3
 
 def clustering_cancion(grafo, grados, cancion):
-    if len(grafo.obtener_adyacentes(cancion)) < 2: return 0
-    return round(2 * ((cantidad_relacionados(grafo, cancion))) / (len(grafo.obtener_adyacentes(cancion)) * (len(grafo.obtener_adyacentes(cancion)) - 1)), CANT_DECIMALES)
+    if len(grafo.obtener_adyacentes(cancion)) < 2: 
+        return 0
+    return round(cantidad_relacionados(grafo, cancion) / (len(grafo.obtener_adyacentes(cancion)) * (len(grafo.obtener_adyacentes(cancion)) - 1)), CANT_DECIMALES)
 
 
 def clustering_promedio(grafo, grados):

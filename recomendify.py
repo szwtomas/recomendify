@@ -21,16 +21,17 @@ def procesar_archivo(ruta_archivo):
             p = Playlist(entrada[5], int(entrada[4]))
             if not canciones_usuarios.existe_vertice(c):
                 canciones_usuarios.agregar_vertice(c)
-            if p.obtener_nombre() not in playlists:
-                playlists[p.obtener_nombre()] = p
-            playlists[p.obtener_nombre()].agregar_cancion(c)
+            if p.obtener_id() not in playlists:
+                playlists[p.obtener_id()] = p
+            playlists[p.obtener_id()].agregar_cancion(c)
             if entrada[1] not in usuarios:
                 usuarios[entrada[1]] = Usuario(entrada[1])
-            if not usuarios[entrada[1]].tiene_playlist(p.obtener_nombre()):
-                usuarios[entrada[1]].agregar_playlist(p.obtener_nombre())
+            if not usuarios[entrada[1]].tiene_playlist(p.obtener_id()):
+                usuarios[entrada[1]].agregar_playlist(p.obtener_id())
         for u in usuarios:
-            canciones_usuarios.agregar_vertice(usuarios[u])
-            for p in usuarios[u].obtener_nombres_playlists():
+            if not canciones_usuarios.existe_vertice(u):
+                canciones_usuarios.agregar_vertice(usuarios[u])
+            for p in usuarios[u].obtener_ids_playlists():
                 for c in playlists[p].obtener_canciones():
                     if not canciones_usuarios.existe_arista(usuarios[u], c):
                         canciones_usuarios.agregar_arista(usuarios[u], c) 
@@ -67,9 +68,8 @@ def imprimir_camino(camino, playlists):
         print("tiene una playlist", end = " --> ")
         print(playlists[camino[i].obtener_playlist_cancion(camino[i+1], playlists)].obtener_nombre(), end=" --> ")
         print("donde aparece", end=" --> ")
-        if i != (len(camino) - 2): print(camino[i+1].obtener_nombre_cancion() + " - " + camino[i+1].obtener_artista(), end=' --> ')
+        if i != (len(camino) - 2): print(camino[i+1].obtener_nombre_cancion() + " - " + camino[i+1].obtener_artista(), end=" --> ")
         else: print(camino[i+1].obtener_nombre_cancion() + " - " + camino[i+1].obtener_artista())
-
 
 '''
 Recibe el grafo de usuarios, la cancion en la cual empieza el camino, la cancion a la que se quiere llegar
@@ -84,13 +84,12 @@ def camino_canciones_usuarios(grafo_usuarios, cancion_origen, cancion_destino, p
         if v == cancion_destino: existe_destino = True
     if not existe_destino or not existe_origen:
         print("Tanto el origen como el destino deben ser canciones")
-        return False
+        return False, False
     camino = camino_minimo(grafo_usuarios, cancion_origen, cancion_destino)
     if not camino: 
         print("No se encontro recorrido")
-        return False
-    imprimir_camino(camino, playlists)
-    return True
+        return False, False
+    return True, camino
         
 
 
@@ -136,17 +135,25 @@ for linea in sys.stdin:
             print("Se deben ingresar 2 canciones")
             continue
         cancion_leida = canciones[0].split(' - ')
+        if len(cancion_leida) != 2: 
+            print("Tanto el origen como el destino deben ser canciones")
+            continue
         cancion_origen = Cancion(cancion_leida[0], cancion_leida[1])
         cancion_leida = canciones[1].split(' - ')
+        if len(cancion_leida) != 2: 
+            print("Tanto el origen como el destino deben ser canciones")
+            continue
         cancion_destino = Cancion(cancion_leida[0], cancion_leida[1]) 
-        camino_canciones_usuarios(grafo_completo, cancion_origen, cancion_destino, playlists)
+        existe_camino, camino = camino_canciones_usuarios(grafo_completo, cancion_origen, cancion_destino, playlists)
+        if existe_camino: 
+            imprimir_camino(camino, playlists)
     elif comando == COMANDO_IMPORTANTES:
         str_importantes = linea.split(' ')
         n = int(str_importantes[1])
         if not grafo_canciones:
             grafo_canciones = cargar_canciones_playlists(playlists)
-            grados_canciones = obtener_grados(grafo_canciones)
-        if not lista_rankings: lista_rankings = page_rank_canciones(grafo_canciones)
+            #grados_canciones = obtener_grados(grafo_canciones)
+        if not lista_rankings: lista_rankings = page_rank_canciones(grafo_completo)
         for i in range(n):
             c = (lista_rankings[i])[1]
             if i != (n - 1): print(c.obtener_nombre_cancion() + ' - ' + c.obtener_artista(), end = '; ')
@@ -211,7 +218,8 @@ for linea in sys.stdin:
         str_cancion = linea[11:-1]
         cancion_artista = str_cancion.split(' - ')
         c = Cancion(cancion_artista[0], cancion_artista[1])
-        print(clustering_cancion(grafo_canciones, grados_canciones, c)) #Sacar len(adyacentes)
+        if not grafo_canciones.existe_vertice(c): print("0000") # No esta encontrando la cancion
+        else: print(clustering_cancion(grafo_canciones, grados_canciones, c)) # Sacar len(adyacentes)
     else:
         print("Comando invalido")
 
